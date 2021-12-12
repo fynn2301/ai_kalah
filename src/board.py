@@ -1,3 +1,5 @@
+from time import sleep
+from typing import NoReturn
 import pygame as pg
 
 
@@ -42,13 +44,7 @@ class Board():
                (SCREENSIZE_WIDTH * 13 / 16, SCREENSIZE_HIGHT * 14 / 16),
                (SCREENSIZE_WIDTH * 15 / 16, SCREENSIZE_HIGHT / 2)]
 
-    def __init__(self, mold_per_player: int = 6, stone_per_mold: int = 3) -> None:
-        """init the board
-
-        Args:
-            mold_per_player (int, optional): number molds on each side. Defaults to 6.
-            stone_per_mold (int, optional): number of stones in each mold at start. Defaults to 3.
-        """
+    def __init__(self, mold_per_player: int = 6, stone_per_mold: int = 4) -> NoReturn:
         my_molds = [stone_per_mold] * mold_per_player
         my_molds.append(0)
         enemy_molds = [stone_per_mold] * mold_per_player
@@ -107,4 +103,21 @@ class Board():
         self._screen.fill(self.GRAY)
         self._draw_board()
         self._draw_fields()
+        pg.display.flip()
+
+    def turn_signal(self) -> NoReturn:
+        """update the field by drawing the field and positions
+        """
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
+
+        self._screen.fill(self.GRAY)
+        self._draw_board()
+        self._draw_fields()
+        font = pg.font.Font(None, 25)
+        text = font.render("Your turn", True, self.BLACK)
+        text_rect = text.get_rect(
+            center=(self.SCREENSIZE_WIDTH/2, self.SCREENSIZE_HIGHT/2))
+        self._screen.blit(text, text_rect)
         pg.display.flip()
