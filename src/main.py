@@ -23,10 +23,15 @@ class Algorithm():
         """
         while(True):
             # ais turn
+            if helper.is_terminate_state(self.board.state):
+                break
+
             next = helper.best_state(self.board.state, 5)
             self.board.state = next
             self.board._update()
             # your turn
+            if helper.is_terminate_state(self.board.state):
+                break
             self.get_player_input()
 
     def get_player_input(self) -> NoReturn:
@@ -108,6 +113,9 @@ class Algorithm():
                                     self.board._update()
                                     # play again
                                     if turn_again:
+
+                                        if helper.is_terminate_state(self.board.state):
+                                            return
                                         self.get_player_input()
                                         return
                                     else:
