@@ -7,14 +7,9 @@ class Board():
     # board setiings
     FACTOR = 0.7
     POINT_DIST_FACT = int(70 * FACTOR)
-    SCREENSIZE_WIDTH = int(1000 * FACTOR)
-    SCREENSIZE_HIGHT = int(400 * FACTOR)
-    EMPTY_RADIUS = int(16 * FACTOR)
-    POINT_RADIUS = int(16 * FACTOR)
     BORDER_WIDTH = int(3 * FACTOR)
     LINE_WIDTH = int(2 * FACTOR)
     FONT = 'chalkduster.ttf'
-    FONT_SIZE = int(80 * FACTOR)
 
     # used color coding
     LIGHT_ORANGE = (255, 230, 205)
@@ -28,23 +23,22 @@ class Board():
     GRAY = (170, 170, 170)
     LIGHT_GREEN = (139, 230, 135)
 
-    ENEMY_KOOR = [(SCREENSIZE_WIDTH * 13 / 16, SCREENSIZE_WIDTH / 16),
-                  (SCREENSIZE_WIDTH * 11 / 16, SCREENSIZE_WIDTH / 16),
-                  (SCREENSIZE_WIDTH * 9 / 16, SCREENSIZE_WIDTH / 16),
-                  (SCREENSIZE_WIDTH * 7 / 16, SCREENSIZE_WIDTH / 16),
-                  (SCREENSIZE_WIDTH * 5 / 16, SCREENSIZE_WIDTH / 16),
-                  (SCREENSIZE_WIDTH * 3 / 16, SCREENSIZE_WIDTH / 16),
-                  (SCREENSIZE_WIDTH * 1 / 16, SCREENSIZE_HIGHT / 2)]
+    ENEMY_KOOR = []
 
-    MY_KOOR = [(SCREENSIZE_WIDTH * 3 / 16, SCREENSIZE_HIGHT * 14 / 16),
-               (SCREENSIZE_WIDTH * 5 / 16, SCREENSIZE_HIGHT * 14 / 16),
-               (SCREENSIZE_WIDTH * 7 / 16, SCREENSIZE_HIGHT * 14 / 16),
-               (SCREENSIZE_WIDTH * 9 / 16, SCREENSIZE_HIGHT * 14 / 16),
-               (SCREENSIZE_WIDTH * 11 / 16, SCREENSIZE_HIGHT * 14 / 16),
-               (SCREENSIZE_WIDTH * 13 / 16, SCREENSIZE_HIGHT * 14 / 16),
-               (SCREENSIZE_WIDTH * 15 / 16, SCREENSIZE_HIGHT / 2)]
+    MY_KOOR = []
 
     def __init__(self, mold_per_player: int = 6, stone_per_mold: int = 4) -> NoReturn:
+        self.SCREENSIZE_HIGHT = int(400 * self.FACTOR)
+        self.SCREENSIZE_WIDTH = int(
+            self.SCREENSIZE_HIGHT / 2 + mold_per_player * 150)
+        self.FONT_SIZE = int(80 * self.FACTOR)
+        self.RADIUS = int(50)
+        for i in range(0, mold_per_player):
+            self.MY_KOOR.append(
+                (self.SCREENSIZE_HIGHT / 4 + self.SCREENSIZE_WIDTH * (i + 1) / 8, self.SCREENSIZE_HIGHT * 12 / 16))
+            self.ENEMY_KOOR.append(
+                (self.SCREENSIZE_HIGHT / 4 + self.SCREENSIZE_WIDTH * (i + 1) / 8, self.SCREENSIZE_HIGHT * 4 / 16))
+        print(self.MY_KOOR)
         my_molds = [stone_per_mold] * mold_per_player
         my_molds.append(0)
         enemy_molds = [stone_per_mold] * mold_per_player
@@ -68,15 +62,15 @@ class Board():
         else:
             player_color = self.WHITE
         pg.draw.ellipse(self._screen, player_color,
-                        (0, 0, self.SCREENSIZE_WIDTH / 8, self.SCREENSIZE_HIGHT))
+                        (0, 0, self.SCREENSIZE_WIDTH / 16, self.SCREENSIZE_HIGHT))
         pg.draw.ellipse(self._screen, self.BLACK,
-                        (0, 0, self.SCREENSIZE_WIDTH / 8, self.SCREENSIZE_HIGHT), self.BORDER_WIDTH)
+                        (0, 0, self.SCREENSIZE_WIDTH / 16, self.SCREENSIZE_HIGHT), self.BORDER_WIDTH)
 
         pg.draw.ellipse(self._screen, ai_color,
-                        (self.SCREENSIZE_WIDTH - self.SCREENSIZE_WIDTH/8, 0, self.SCREENSIZE_WIDTH / 8, self.SCREENSIZE_HIGHT))
+                        (self.SCREENSIZE_WIDTH - self.SCREENSIZE_HIGHT / 4, 0, self.SCREENSIZE_WIDTH / 16, self.SCREENSIZE_HIGHT))
         pg.draw.ellipse(self._screen, self.BLACK,
-                        (self.SCREENSIZE_WIDTH - self.SCREENSIZE_WIDTH/8, 0, self.SCREENSIZE_WIDTH / 8, self.SCREENSIZE_HIGHT), self.BORDER_WIDTH)
-        for i, koor in enumerate(self.MY_KOOR[:-1]):
+                        (self.SCREENSIZE_WIDTH - self.SCREENSIZE_HIGHT / 4, 0, self.SCREENSIZE_WIDTH / 16, self.SCREENSIZE_HIGHT), self.BORDER_WIDTH)
+        for i, koor in enumerate(self.MY_KOOR):
 
             if color_from_ai == i:
                 color = self.LIGHT_RED
@@ -85,10 +79,10 @@ class Board():
             else:
                 color = self.WHITE
             pg.draw.circle(self._screen, color, koor,
-                           self.SCREENSIZE_WIDTH / 16)
+                           self.RADIUS)
             pg.draw.circle(self._screen, self.BLACK, koor,
-                           self.SCREENSIZE_WIDTH / 16, self.BORDER_WIDTH)
-        for i, koor in enumerate(self.ENEMY_KOOR[:-1]):
+                           self.RADIUS, self.BORDER_WIDTH)
+        for i, koor in enumerate(self.ENEMY_KOOR):
             if color_from_player == i:
                 color = self.LIGHT_RED
             elif i in color_player:
@@ -98,9 +92,9 @@ class Board():
             else:
                 color = self.WHITE
             pg.draw.circle(self._screen, color, koor,
-                           self.SCREENSIZE_WIDTH / 16)
+                           self.RADIUS)
             pg.draw.circle(self._screen, self.BLACK, koor,
-                           self.SCREENSIZE_WIDTH / 16, self.BORDER_WIDTH)
+                           self.RADIUS, self.BORDER_WIDTH)
 
     def _draw_fields(self):
         for mold, (x, y) in zip(self.state[0], self.MY_KOOR):
