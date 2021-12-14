@@ -3,6 +3,7 @@ import helpfunctions as helper
 from board import Board
 import pygame as pg
 from time import sleep
+import random
 
 
 class Algorithm():
@@ -22,6 +23,15 @@ class Algorithm():
         Returns:
             NoReturn: NoReturn
         """
+        ai_starts = random.choice([True, False])
+
+        if ai_starts:
+            best_suc = helper.best_state(self.board.state, 5)
+            self.animate_move(self.board.state, best_suc)
+            self.board.state = best_suc
+            self.board._update()
+        else:
+            self.get_player_input()
 
         while(True):
             # ais turn
