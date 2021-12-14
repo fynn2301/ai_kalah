@@ -55,25 +55,49 @@ class Board():
             [self.SCREENSIZE_WIDTH, self.SCREENSIZE_HIGHT])
         self._update()
 
-    def _draw_board(self):
+    def _draw_board(self, color_ai: list = [], color_player: list = [], color_from_player: int = -1, color_from_ai: int = -1, possible_player: list = []):
         """draw board
         """
-        pg.draw.ellipse(self._screen, self.WHITE,
+        if len(self.state[0]) - 1 in color_ai:
+            ai_color = self.LIGHT_BLUE
+        else:
+            ai_color = self.WHITE
+
+        if len(self.state[0]) - 1 in color_player:
+            player_color = self.LIGHT_BLUE
+        else:
+            player_color = self.WHITE
+        pg.draw.ellipse(self._screen, player_color,
                         (0, 0, self.SCREENSIZE_WIDTH / 8, self.SCREENSIZE_HIGHT))
         pg.draw.ellipse(self._screen, self.BLACK,
                         (0, 0, self.SCREENSIZE_WIDTH / 8, self.SCREENSIZE_HIGHT), self.BORDER_WIDTH)
 
-        pg.draw.ellipse(self._screen, self.WHITE,
+        pg.draw.ellipse(self._screen, ai_color,
                         (self.SCREENSIZE_WIDTH - self.SCREENSIZE_WIDTH/8, 0, self.SCREENSIZE_WIDTH / 8, self.SCREENSIZE_HIGHT))
         pg.draw.ellipse(self._screen, self.BLACK,
                         (self.SCREENSIZE_WIDTH - self.SCREENSIZE_WIDTH/8, 0, self.SCREENSIZE_WIDTH / 8, self.SCREENSIZE_HIGHT), self.BORDER_WIDTH)
-        for koor in self.MY_KOOR[:-1]:
-            pg.draw.circle(self._screen, self.WHITE, koor,
+        for i, koor in enumerate(self.MY_KOOR[:-1]):
+
+            if color_from_ai == i:
+                color = self.LIGHT_RED
+            elif i in color_ai:
+                color = self.LIGHT_BLUE
+            else:
+                color = self.WHITE
+            pg.draw.circle(self._screen, color, koor,
                            self.SCREENSIZE_WIDTH / 16)
             pg.draw.circle(self._screen, self.BLACK, koor,
                            self.SCREENSIZE_WIDTH / 16, self.BORDER_WIDTH)
-        for koor in self.ENEMY_KOOR[:-1]:
-            pg.draw.circle(self._screen, self.WHITE, koor,
+        for i, koor in enumerate(self.ENEMY_KOOR[:-1]):
+            if color_from_player == i:
+                color = self.LIGHT_RED
+            elif i in color_player:
+                color = self.LIGHT_BLUE
+            elif i in possible_player:
+                color = self.LIGHT_GREEN
+            else:
+                color = self.WHITE
+            pg.draw.circle(self._screen, color, koor,
                            self.SCREENSIZE_WIDTH / 16)
             pg.draw.circle(self._screen, self.BLACK, koor,
                            self.SCREENSIZE_WIDTH / 16, self.BORDER_WIDTH)
@@ -93,7 +117,7 @@ class Board():
             self._screen.blit(
                 img, (x - ((len(text)+0.5) * self.FONT_SIZE/8), y - self.FONT_SIZE/4))
 
-    def _update(self) -> None:
+    def _update(self, color_ai: list = [], color_player: list = [], color_from_player: int = -1, color_from_ai: int = -1, possible_player: list = []) -> None:
         """update the field by drawing the field and positions
         """
         for event in pg.event.get():
@@ -101,11 +125,12 @@ class Board():
                 running = False
 
         self._screen.fill(self.GRAY)
-        self._draw_board()
+        self._draw_board(color_ai, color_player,
+                         color_from_player, color_from_ai)
         self._draw_fields()
         pg.display.flip()
 
-    def turn_signal(self) -> NoReturn:
+    def turn_signal(self, possible_player: list = []) -> NoReturn:
         """update the field by drawing the field and positions
         """
         for event in pg.event.get():
@@ -113,7 +138,7 @@ class Board():
                 running = False
 
         self._screen.fill(self.GRAY)
-        self._draw_board()
+        self._draw_board(possible_player=possible_player)
         self._draw_fields()
         font = pg.font.Font(None, 25)
         text = font.render("Your turn", True, self.BLACK)
