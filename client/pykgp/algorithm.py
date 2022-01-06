@@ -101,7 +101,7 @@ def get_succesor_substate(state: tuple, turn: int) -> list:
     return suc_substates
 
 
-def get_succesor_substate_init(state: tuple, turn: int = 0) -> list:
+def get_succesor_substate_init(state: tuple, turn: int, move_before: list = []) -> list:
     """Getting a state and the player thats turn it is 0 := ai, 1 := enemy and returning a list of substates
 
     Args:
@@ -114,7 +114,7 @@ def get_succesor_substate_init(state: tuple, turn: int = 0) -> list:
             suc_states = (first_successor_state, [list_of_followup_states])
     """
     suc_substates = []
-    suc_moves = []
+    moves = []
     # get the turn
     if turn == 0:
         player = 0
@@ -128,31 +128,29 @@ def get_succesor_substate_init(state: tuple, turn: int = 0) -> list:
     # iterate the molds of the players whos turn it is
     for k, mold in enumerate(state[player][:-1]):
         # if mold is empty it cant be chosen
+        move = k
         if mold == 0:
             continue
 
         # else all the stones get distributed in the following molds
         # copy the state and manipulate it
         suc_state = copy.deepcopy(state)
-        move = k
         stones_left = mold
         suc_state[player][k] = 0
         dest = k + 1
         # distribute stones on the rest of the own molds
+        a = False
         for i in range(dest, min(dest + stones_left, len(suc_state[player]))):
             suc_state[player][i] += 1
             stones_left -= 1
             # is the last stone put in the goal mold of the own molds
             if stones_left <= 0 and i == len(suc_state[player]) - 1:
-                repeat_sucessor_state, repeat_successor_move = get_succesor_substate_init(
-                    suc_state, turn)
-                first_suc_state = suc_state
-                suc_state = None
-                suc_state = (first_suc_state, repeat_sucessor_state)
-
-                first_move = move
-                move = (first_move, repeat_successor_move)
-            # is the opposit side empty and the target mold empty we win all the opposit molds
+                repeat_sucessor_state, repeat_moves = get_succesor_substate_init(
+                    suc_state, turn, move_before=move_before+[move])
+                suc_substates += repeat_sucessor_state
+                moves += repeat_moves
+                a = True
+            # is the own side empty and the oppsit mold not empty we win all the opposit molds
             elif stones_left <= 0 and suc_state[player][i] == 1 and suc_state[enemy][len(suc_state[enemy]) - 2 - i] > 0 and i != len(suc_state[player]) - 1:
                 suc_state[player][i] = 0
                 opposit = len(suc_state[enemy]) - 2 - i
@@ -174,25 +172,21 @@ def get_succesor_substate_init(state: tuple, turn: int = 0) -> list:
                 stones_left -= 1
                 # is the last stone put in the goal mold of the own molds
                 if stones_left <= 0 and i == len(suc_state[player]) - 1:
-                    repeat_sucessor_state, repeat_successor_move = get_succesor_substate_init(
-                        suc_state, turn)
-
-                    first_suc_state = suc_state
-                    suc_state = None
-                    suc_state = (first_suc_state, repeat_sucessor_state)
-
-                    first_move = move
-                    move = (first_move, repeat_successor_move)
-
-                # is the opposit side empty and the target mold empty we win all the opposit molds
+                    repeat_sucessor_state, repeat_moves = get_succesor_substate_init(
+                        suc_state, turn, move_before=move_before+[move])
+                    suc_substates += repeat_sucessor_state
+                    moves += repeat_moves
+                    a = True
+                # is the own side empty and the target mold not empty we win all the opposit molds
                 elif stones_left <= 0 and suc_state[player][i] == 1 and suc_state[enemy][len(suc_state[enemy]) - 2 - i] > 0 and i != len(suc_state[player]) - 1:
                     suc_state[player][i] = 0
                     opposit = len(suc_state[enemy]) - 2 - i
                     won = suc_state[enemy][opposit] + 1
                     suc_state[enemy][opposit] = 0
                     suc_state[player][-1] += won
-        suc_substates.append(suc_state)
-        suc_moves.append(move)
+        if not a:
+            suc_substates.append(suc_state)
+            moves.append(move_before + [k])
 
     for suc_substate in suc_substates:
         if type(suc_substate[0]) == list:
@@ -209,26 +203,7 @@ def get_succesor_substate_init(state: tuple, turn: int = 0) -> list:
                 suc_substate[player][-1] += rest
                 suc_substate[player][:-1] = [0] * \
                     ((len(suc_substate[player])) - 1)
-    return suc_substates, suc_moves
-
-
-def substates_to_states_init(suc_substates: list, suc_submoves: list) -> list:
-    suc_states = []
-    for suc_substate, suc_submove in zip(suc_substates, suc_submoves):
-        if type(suc_substate[0]) == list:
-            suc_substate = [suc_substate]
-            suc_submove = [suc_submove]
-            suc_states.append((suc_substate, suc_submove))
-        else:
-            temp_d = substates_to_states_init(
-                suc_substate[1], suc_submove[1])
-            suc_substate = [suc_substate[0]]
-            suc_submove = [suc_submove[0]]
-            for temp_state, temp_move in temp_d:
-                suc_states.append(
-                    (suc_substate + temp_state, suc_submove + temp_move))
-
-    return suc_states
+    return suc_substates, moves
 
 
 def value_of_state(state: tuple) -> int:
@@ -261,7 +236,7 @@ def is_terminate_state(state: tuple) -> bool:
     Returns:
         bool: is the state terminate state
     """
-    if state[0][:-1] == [0] * (len(state[0]) - 1) or state[1][:-1] == [1] * (len(state[1]) - 1):
+    if state[0][:-1] == [0] * (len(state[0]) - 1) or state[1][:-1] == [0] * (len(state[1]) - 1):
         return True
     else:
         return False
@@ -318,7 +293,10 @@ def min_state(state: tuple, depth: int, max_yet: int) -> int:
     return min_yet
 
 
-def best_state(state: tuple, depth: int = 0) -> tuple:
+BEST_MOVE = None
+
+
+def best_move(state: tuple, depth: int = 0) -> tuple:
     """init of alpha beta
 
     Args:
@@ -328,15 +306,19 @@ def best_state(state: tuple, depth: int = 0) -> tuple:
     Returns:
         tuple: returns the best state
     """
-    suc_states = get_succesor_substate(state, 0)
-    best_state = None
+    global BEST_MOVE
+    suc_states, moves = get_succesor_substate_init(state, 0)
+    BEST_MOVE = moves[0]
+    
+    best_move = None
     max_yet = -sys.maxsize
-    for suc_state in suc_states:
+    for suc_state, move in zip(suc_states, moves):
         if depth <= 0 or is_terminate_state(suc_state):
             value = value_of_state(suc_state)
         else:
             value = min_state(suc_state, depth - 1, max_yet)
         if value > max_yet:
-            best_state = suc_state
+            best_move = move
+            BEST_MOVE = move
             max_yet = value
-    return best_state
+    return best_move
